@@ -1,0 +1,44 @@
+{
+  "realm": "redfroggy",
+  "users": [
+    {
+      "id": "965cb638-fe35-4d9e-8800-a544f3afc7f6",
+      "createdTimestamp": 1505479373742,
+      "username": "dej",
+      "enabled": true,
+      "totp": false,
+      "emailVerified": true,
+      "firstName": "david",
+      "lastName": "jay",
+      "email": "david.jay@redfroggy.fr",
+      "credentials": [
+        {
+          "type": "password",
+          "createdDate": 1505479392766,
+          "secretData": "{\"value\":\"MbKsMgWPnZyImih8s4SaoCSCq+XIY/c6S9F93sXEidHF1TjPWxCqMkec0+o3860CMLXHt3az61cIJOWI0FW9aw==\",\"salt\":\"fmpBI1r8R1u75hDLMUlwBw==\"}",
+          "credentialData": "{\"hashIterations\":27500,\"algorithm\":\"pbkdf2-sha256\"}"
+        }
+      ],
+      "disableableCredentialTypes": [
+        "password"
+      ],
+      "requiredActions": [],
+      "realmRoles": [
+        "offline_access",
+        "uma_authorization"
+      ],
+      "clientRoles": {
+        "account": [
+          "view-profile",
+          "manage-account"
+        ]
+      },
+      "notBefore": 0,
+      "groups": [
+        "/Staff",
+        "/Members",
+        "/Admins"
+      ]
+    }
+  ]
+}
