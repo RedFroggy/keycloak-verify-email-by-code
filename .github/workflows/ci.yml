@@ -29,4 +29,4 @@ jobs:
           java-version: 8
 
       - name: Build with Maven
-        run: ./mvnw -B clean test
+        run: mvn -B clean test
