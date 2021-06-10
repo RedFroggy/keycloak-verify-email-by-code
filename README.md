@@ -56,7 +56,7 @@ You can override individual templates in your own theme. To create a custom emai
 themes/base/email/email-verification-with-code.ftl (in keycloak theme) to themes/mytheme/email/
 
 To create a custom email verify form for the mytheme theme copy template
-![login-verify-email-code.ftl](src/main/resources/theme-resources/templates/login-verify-email-code.ftl) to
+[login-verify-email-code.ftl](src/main/resources/theme-resources/templates/login-verify-email-code.ftl) to
 themes/mytheme/login
 
 ## Q&A
