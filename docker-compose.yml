@@ -16,7 +16,7 @@ services:
     volumes:
       - ./realm-config:/opt/jboss/keycloak/realm-config
       - ./standalone/configuration/standalone.xml:/opt/jboss/keycloak/standalone/configuration/standalone.xml
-    #      - ./themes/base/login/login-verify-email-code.ftl:/opt/jboss/keycloak/themes/base/login/login-verify-email-code.ftl
+      - ./src/main/resources/theme-resources/templates/login-verify-email-code.ftl:/opt/jboss/keycloak/themes/base/login/login-verify-email-code.ftl
     environment:
       - DB_VENDOR=h2
       - DB_ADDR=localhost
