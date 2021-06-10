@@ -1,0 +1,45 @@
+version: '3'
+services:
+  keycloak:
+    network_mode: host
+    build: .
+    command: [ "-b", "0.0.0.0",
+               "-c", "standalone.xml",
+               "-Dkeycloak.migration.realmName=redfroggy",
+               "-Dkeycloak.migration.usersExportStrategy=DIFFERENT_FILES",
+               "-Dkeycloak.migration.action=import",
+               "-Dkeycloak.migration.provider=dir",
+               "-Dkeycloak.migration.dir=/opt/jboss/keycloak/realm-config/dev",
+               "-Dkeycloak.migration.strategy=OVERWRITE_EXISTING",
+               '-Dkeycloak.profile.feature.upload_scripts=enabled',
+               "-Djboss.socket.binding.port-offset=1000" ]
+    volumes:
+      - ./realm-config:/opt/jboss/keycloak/realm-config
+      - ./standalone/configuration/standalone.xml:/opt/jboss/keycloak/standalone/configuration/standalone.xml
+      - ./src/main/resources/theme-resources/templates/login-verify-email-code.ftl:/opt/jboss/keycloak/themes/base/login/login-verify-email-code.ftl
+    environment:
+      - DB_VENDOR=h2
+      - DB_ADDR=localhost
+      - DB_DATABASE=keycloak
+      - DB_USER=keycloak
+      - DB_PASSWORD=keycloak
+      - DB_PORT=9132
+      - KEYCLOAK_USER=admin
+      - KEYCLOAK_PASSWORD=admin
+      - JDBC_PARAMS=connectTimeout=30
+      - PROXY_ADDRESS_FORWARDING=true
+#      - KEYCLOAK_LOGLEVEL=DEBUG
+#    ports:
+#      - 9080:9080
+#      - 9443:9443
+#      - 10990:10990
+#    dns:
+#      - 8.8.8.8
+#      - 8.8.4.4
+
+#networks:
+#  default:
+#    ipam:
+#      driver: default
+#      config:
+#        - subnet: 172.28.0.0/16
