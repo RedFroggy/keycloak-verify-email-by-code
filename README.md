@@ -67,14 +67,17 @@ Verify email code is generated using `org.keycloak.common.util.RandomString`. By
 
 e.g. configure action to generate a code of 6 digits :
 ```xml
-<spi name="required-action">
-    <provider name="VERIFY_EMAIL_CODE" enabled="true">
-        <properties>
-            <property name="codeLength" value="6"/>
-            <property name="codeSymbols" value="0123456789"/>
-        </properties>
-    </provider>
-</spi>
+<subsystem xmlns="urn:jboss:domain:keycloak-server:1.1">
+    [...]
+    <spi name="required-action">
+        <provider name="VERIFY_EMAIL_CODE" enabled="true">
+            <properties>
+                <property name="codeLength" value="6"/>
+                <property name="codeSymbols" value="0123456789"/>
+            </properties>
+        </provider>
+    </spi>
+</subsystem>
 ```
 
 ## Q&A
