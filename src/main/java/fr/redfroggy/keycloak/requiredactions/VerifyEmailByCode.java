@@ -39,6 +39,8 @@ import org.keycloak.sessions.AuthenticationSessionModel;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilderException;
+
+import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -52,6 +54,12 @@ public class VerifyEmailByCode implements RequiredActionProvider, RequiredAction
     public static final String EMAIL_CODE = "email_code";
     public static final String INVALID_CODE = "VerifyEmailInvalidCode";
     public static final String LOGIN_VERIFY_EMAIL_CODE_TEMPLATE = "login-verify-email-code.ftl";
+    public static final String CONFIG_CODE_LENGTH = "codeLength";
+    public static final String CONFIG_CODE_SYMBOLS = "codeSymbols";
+    public static final int DEFAULT_CODE_LENGTH = 8;
+    public static final String DEFAULT_CODE_SYMBOLS = RandomString.alphanum;
+    private int codeLength;
+    private String codeSymbols;
 
     @Override
     public void evaluateTriggers(RequiredActionContext context) {
@@ -113,7 +121,8 @@ public class VerifyEmailByCode implements RequiredActionProvider, RequiredAction
 
     @Override
     public void init(Config.Scope config) {
-
+        codeLength = config.getInt(CONFIG_CODE_LENGTH, DEFAULT_CODE_LENGTH);
+        codeSymbols = config.get(CONFIG_CODE_SYMBOLS, DEFAULT_CODE_SYMBOLS);
     }
 
     @Override
@@ -136,7 +145,7 @@ public class VerifyEmailByCode implements RequiredActionProvider, RequiredAction
         UserModel user = context.getUser();
         AuthenticationSessionModel authSession = context.getAuthenticationSession();
         EventBuilder event = context.getEvent().clone().event(EventType.SEND_VERIFY_EMAIL).detail(Details.EMAIL, user.getEmail());
-        String code = RandomString.randomCode(8);
+        String code = new RandomString(codeLength, new SecureRandom(), codeSymbols).nextString();
         authSession.setAuthNote(Constants.VERIFY_EMAIL_CODE, code);
         RealmModel realm = session.getContext().getRealm();
 

@@ -59,6 +59,27 @@ To create a custom email verify form for the mytheme theme copy template
 [login-verify-email-code.ftl](src/main/resources/theme-resources/templates/login-verify-email-code.ftl) to
 themes/mytheme/login
 
+#### Code length and symbols
+
+Verify email code is generated using `org.keycloak.common.util.RandomString`. By default generated code will be 8 characters long and will use alphanumeric symbols. You may customize this behavior using SPI configuration in your `standalone.xml` file:
+- property `codeLength` is a numeric value representing the number of symbols, defaults to `8`
+- property `codeSymbols` is a string value listing all accepted symbols, defaults to `RandomString.alphanum`
+
+e.g. configure action to generate a code of 6 digits :
+```xml
+<subsystem xmlns="urn:jboss:domain:keycloak-server:1.1">
+    [...]
+    <spi name="required-action">
+        <provider name="VERIFY_EMAIL_CODE" enabled="true">
+            <properties>
+                <property name="codeLength" value="6"/>
+                <property name="codeSymbols" value="0123456789"/>
+            </properties>
+        </provider>
+    </spi>
+</subsystem>
+```
+
 ## Q&A
 
 [See Q&A](FAQ.md)

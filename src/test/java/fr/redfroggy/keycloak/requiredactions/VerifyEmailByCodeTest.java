@@ -3,6 +3,7 @@ package fr.redfroggy.keycloak.requiredactions;
 import org.jboss.resteasy.spi.HttpRequest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.keycloak.Config;
 import org.keycloak.authentication.RequiredActionContext;
 import org.keycloak.email.EmailException;
 import org.keycloak.email.EmailTemplateProvider;
@@ -13,6 +14,7 @@ import org.keycloak.events.EventType;
 import org.keycloak.forms.login.LoginFormsProvider;
 import org.keycloak.models.*;
 import org.keycloak.sessions.AuthenticationSessionModel;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -20,8 +22,7 @@ import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
-import static fr.redfroggy.keycloak.requiredactions.VerifyEmailByCode.LOGIN_VERIFY_EMAIL_CODE_TEMPLATE;
-import static fr.redfroggy.keycloak.requiredactions.VerifyEmailByCode.VERIFY_EMAIL_CODE;
+import static fr.redfroggy.keycloak.requiredactions.VerifyEmailByCode.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
@@ -55,6 +56,9 @@ class VerifyEmailByCodeTest {
     @Mock
     private RequiredActionContext requiredActionContext;
 
+    @Mock
+    private Config.Scope config;
+
     private VerifyEmailByCode action = new VerifyEmailByCode();
 
 
@@ -70,6 +74,7 @@ class VerifyEmailByCodeTest {
 
     @Test
     public void shouldTriggerActionWhenRealmIsEnableAndUserNotVerified() {
+        initAction();
         when(requiredActionContext.getRealm()).thenReturn(realm);
         when(requiredActionContext.getUser()).thenReturn(user);
 
@@ -81,6 +86,7 @@ class VerifyEmailByCodeTest {
 
     @Test
     public void shouldNotTriggerActionWhenRealmIsDisable() {
+        initAction();
         when(requiredActionContext.getRealm()).thenReturn(realm);
         when(realm.isVerifyEmail()).thenReturn(false);
 
@@ -90,6 +96,7 @@ class VerifyEmailByCodeTest {
 
     @Test
     public void shouldNotTriggerActionWhenRealmIsEnableAndUserIsVerified() {
+        initAction();
         when(requiredActionContext.getRealm()).thenReturn(realm);
         when(requiredActionContext.getUser()).thenReturn(user);
 
@@ -101,6 +108,7 @@ class VerifyEmailByCodeTest {
 
     @Test
     public void shouldReturnSuccessOnChallengeWhenEmailIsVerified() {
+        initAction();
         when(requiredActionContext.getUser()).thenReturn(user);
 
         when(user.isEmailVerified()).thenReturn(true);
@@ -111,6 +119,7 @@ class VerifyEmailByCodeTest {
 
     @Test
     public void shouldIgnoreChallengeWhenEmailIsBlank() {
+        initAction();
         when(requiredActionContext.getUser()).thenReturn(user);
 
         action.requiredActionChallenge(requiredActionContext);
@@ -120,6 +129,7 @@ class VerifyEmailByCodeTest {
 
     @Test
     public void shouldLogEmailSendFailedWhenEmailExceptionOnSend() throws EmailException {
+        initAction();
         mockChallenge();
         doThrow(EmailException.class).when(templateProvider)
                 .send(eq("emailVerificationSubject"), eq("email-verification-with-code.ftl"), any());
@@ -134,6 +144,7 @@ class VerifyEmailByCodeTest {
 
     @Test
     public void shouldSendVerifyEmailOnChallengeWhenEmailIsNotBlankAndNotVerified() throws EmailException {
+        initAction();
         mockChallenge();
         action.requiredActionChallenge(requiredActionContext);
 
@@ -141,6 +152,27 @@ class VerifyEmailByCodeTest {
         verify(event).success();
         verify(form).createForm("login-verify-email-code.ftl");
         verify(requiredActionContext).challenge(response);
+    }
+
+    @Test
+    public void shouldGenerateCodeWithDefaultConfiguration() {
+        initAction();
+        mockChallenge();
+        action.requiredActionChallenge(requiredActionContext);
+
+        verifyCode(DEFAULT_CODE_LENGTH, DEFAULT_CODE_SYMBOLS);
+    }
+
+    @Test
+    public void shouldGenerateCodeWithSixDigits() {
+        int codeLength = 6;
+        String codeSymbols = "0123456789";
+
+        initAction(codeLength, codeSymbols);
+        mockChallenge();
+        action.requiredActionChallenge(requiredActionContext);
+
+        verifyCode(codeLength, codeSymbols);
     }
 
     private void mockChallenge() {
@@ -170,8 +202,25 @@ class VerifyEmailByCodeTest {
         when(form.createForm(LOGIN_VERIFY_EMAIL_CODE_TEMPLATE)).thenReturn(response);
     }
 
+    private void initAction(int codeLength, String codeSymbols) {
+        when(config.getInt(CONFIG_CODE_LENGTH, DEFAULT_CODE_LENGTH)).thenReturn(codeLength);
+        when(config.get(CONFIG_CODE_SYMBOLS, DEFAULT_CODE_SYMBOLS)).thenReturn(codeSymbols);
+        action.init(config);
+    }
+
+    private void initAction() {
+        initAction(DEFAULT_CODE_LENGTH, DEFAULT_CODE_SYMBOLS);
+    }
+
+    private void verifyCode(int codeLength, String codeSymbols) {
+        ArgumentCaptor<String> code = ArgumentCaptor.forClass(String.class);
+        verify(authSession).setAuthNote(eq(Constants.VERIFY_EMAIL_CODE), code.capture());
+        assertThat(code.getValue()).matches("^[" + codeSymbols + "]{" + codeLength + "}$");
+    }
+
     @Test
     public void shouldChallengeOnProcessActionWhenCodeIsNull() throws EmailException {
+        initAction();
         when(requiredActionContext.getUser()).thenReturn(user);
         when(user.getEmail()).thenReturn("keycloak@redfroggy.fr");
 
@@ -194,6 +243,7 @@ class VerifyEmailByCodeTest {
 
     @Test
     public void shouldChallengeWithErrorOnProcessActionWhenCodeIsNotValid() throws EmailException {
+        initAction();
         when(requiredActionContext.getUser()).thenReturn(user);
         when(user.getEmail()).thenReturn("keycloak@redfroggy.fr");
 
@@ -228,6 +278,7 @@ class VerifyEmailByCodeTest {
 
     @Test
     public void shouldSuccessOnProcessActionWhenCodeIsValid() throws EmailException {
+        initAction();
         when(requiredActionContext.getUser()).thenReturn(user);
         when(user.getEmail()).thenReturn("keycloak@redfroggy.fr");
 

@@ -521,6 +521,14 @@
                     </properties>
                 </provider>
             </spi>
+            <spi name="required-action">
+                <provider name="VERIFY_EMAIL_CODE" enabled="true">
+                    <properties>
+                        <property name="codeLength" value="6"/>
+                        <property name="codeSymbols" value="0123456789"/>
+                    </properties>
+                </provider>
+            </spi>
         </subsystem>
         <subsystem xmlns="urn:jboss:domain:mail:3.0">
             <mail-session name="default" jndi-name="java:jboss/mail/Default">
