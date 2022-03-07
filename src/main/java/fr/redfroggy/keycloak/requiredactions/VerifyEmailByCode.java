@@ -17,13 +17,20 @@
 
 package fr.redfroggy.keycloak.requiredactions;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriBuilderException;
+
 import org.jboss.logging.Logger;
 import org.keycloak.Config;
 import org.keycloak.authentication.DisplayTypeRequiredActionFactory;
 import org.keycloak.authentication.RequiredActionContext;
 import org.keycloak.authentication.RequiredActionFactory;
 import org.keycloak.authentication.RequiredActionProvider;
-import org.keycloak.common.util.RandomString;
+import org.keycloak.common.util.SecretGenerator;
 import org.keycloak.email.EmailException;
 import org.keycloak.email.EmailTemplateProvider;
 import org.keycloak.events.Details;
@@ -31,18 +38,14 @@ import org.keycloak.events.Errors;
 import org.keycloak.events.EventBuilder;
 import org.keycloak.events.EventType;
 import org.keycloak.forms.login.LoginFormsProvider;
-import org.keycloak.models.*;
+import org.keycloak.models.Constants;
+import org.keycloak.models.KeycloakSession;
+import org.keycloak.models.KeycloakSessionFactory;
+import org.keycloak.models.RealmModel;
+import org.keycloak.models.UserModel;
 import org.keycloak.models.utils.FormMessage;
 import org.keycloak.services.validation.Validation;
 import org.keycloak.sessions.AuthenticationSessionModel;
-
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriBuilderException;
-
-import java.security.SecureRandom;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * @author <a href="mailto:bill@burkecentral.com">Bill Burke</a>
@@ -57,7 +60,7 @@ public class VerifyEmailByCode implements RequiredActionProvider, RequiredAction
     public static final String CONFIG_CODE_LENGTH = "codeLength";
     public static final String CONFIG_CODE_SYMBOLS = "codeSymbols";
     public static final int DEFAULT_CODE_LENGTH = 8;
-    public static final String DEFAULT_CODE_SYMBOLS = RandomString.alphanum;
+    public static final String DEFAULT_CODE_SYMBOLS = String.valueOf(SecretGenerator.ALPHANUM);
     private int codeLength;
     private String codeSymbols;
 
@@ -145,7 +148,7 @@ public class VerifyEmailByCode implements RequiredActionProvider, RequiredAction
         UserModel user = context.getUser();
         AuthenticationSessionModel authSession = context.getAuthenticationSession();
         EventBuilder event = context.getEvent().clone().event(EventType.SEND_VERIFY_EMAIL).detail(Details.EMAIL, user.getEmail());
-        String code = new RandomString(codeLength, new SecureRandom(), codeSymbols).nextString();
+        String code = SecretGenerator.getInstance().randomString(codeLength, codeSymbols.toCharArray());
         authSession.setAuthNote(Constants.VERIFY_EMAIL_CODE, code);
         RealmModel realm = session.getContext().getRealm();
 
