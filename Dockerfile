@@ -1,4 +1,4 @@
-FROM jboss/keycloak:11.0.3
+FROM jboss/keycloak:15.1.1
 
 ENV DB_VENDOR H2
 
