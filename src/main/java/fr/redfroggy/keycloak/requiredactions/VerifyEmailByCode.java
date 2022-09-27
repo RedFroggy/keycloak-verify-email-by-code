@@ -26,7 +26,6 @@ import javax.ws.rs.core.UriBuilderException;
 
 import org.jboss.logging.Logger;
 import org.keycloak.Config;
-import org.keycloak.authentication.DisplayTypeRequiredActionFactory;
 import org.keycloak.authentication.RequiredActionContext;
 import org.keycloak.authentication.RequiredActionFactory;
 import org.keycloak.authentication.RequiredActionProvider;
@@ -38,7 +37,6 @@ import org.keycloak.events.Errors;
 import org.keycloak.events.EventBuilder;
 import org.keycloak.events.EventType;
 import org.keycloak.forms.login.LoginFormsProvider;
-import org.keycloak.models.Constants;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.KeycloakSessionFactory;
 import org.keycloak.models.RealmModel;
@@ -51,7 +49,7 @@ import org.keycloak.sessions.AuthenticationSessionModel;
  * @author <a href="mailto:bill@burkecentral.com">Bill Burke</a>
  * @version $Revision: 1 $
  */
-public class VerifyEmailByCode implements RequiredActionProvider, RequiredActionFactory, DisplayTypeRequiredActionFactory {
+public class VerifyEmailByCode implements RequiredActionProvider, RequiredActionFactory {
     private static final Logger logger = Logger.getLogger(VerifyEmailByCode.class);
     public static final String VERIFY_EMAIL_CODE = "VERIFY_EMAIL_CODE";
     public static final String EMAIL_CODE = "email_code";
@@ -93,7 +91,7 @@ public class VerifyEmailByCode implements RequiredActionProvider, RequiredAction
     @Override
     public void processAction(RequiredActionContext context) {
         EventBuilder event = context.getEvent().clone().event(EventType.VERIFY_EMAIL).detail(Details.EMAIL, context.getUser().getEmail());
-        String code = context.getAuthenticationSession().getAuthNote(Constants.VERIFY_EMAIL_CODE);
+        String code = context.getAuthenticationSession().getAuthNote(VERIFY_EMAIL_CODE);
         if (code == null) {
             requiredActionChallenge(context);
             return;
@@ -111,7 +109,7 @@ public class VerifyEmailByCode implements RequiredActionProvider, RequiredAction
             return;
         }
         context.getUser().setEmailVerified(true);
-        context.getAuthenticationSession().removeAuthNote(Constants.VERIFY_EMAIL_CODE);
+        context.getAuthenticationSession().removeAuthNote(VERIFY_EMAIL_CODE);
         event.success();
         context.success();
     }
@@ -149,7 +147,7 @@ public class VerifyEmailByCode implements RequiredActionProvider, RequiredAction
         AuthenticationSessionModel authSession = context.getAuthenticationSession();
         EventBuilder event = context.getEvent().clone().event(EventType.SEND_VERIFY_EMAIL).detail(Details.EMAIL, user.getEmail());
         String code = SecretGenerator.getInstance().randomString(codeLength, codeSymbols.toCharArray());
-        authSession.setAuthNote(Constants.VERIFY_EMAIL_CODE, code);
+        authSession.setAuthNote(VERIFY_EMAIL_CODE, code);
         RealmModel realm = session.getContext().getRealm();
 
         Map<String, Object> attributes = new HashMap<>();
@@ -176,13 +174,9 @@ public class VerifyEmailByCode implements RequiredActionProvider, RequiredAction
     }
 
     @Override
-    public RequiredActionProvider createDisplay(KeycloakSession keycloakSession, String displayType) {
-        if (displayType == null) return this;
-        return null;
-    }
-
-    @Override
     public String getDisplayText() {
+
+        logger.info("Retrieved display text for VerifyEmailByCode");
         return "Verify Email by code";
     }
 }

@@ -59,7 +59,7 @@ class VerifyEmailByCodeTest {
     @Mock
     private Config.Scope config;
 
-    private VerifyEmailByCode action = new VerifyEmailByCode();
+    private final VerifyEmailByCode action = new VerifyEmailByCode();
 
 
     @Test
@@ -214,7 +214,7 @@ class VerifyEmailByCodeTest {
 
     private void verifyCode(int codeLength, String codeSymbols) {
         ArgumentCaptor<String> code = ArgumentCaptor.forClass(String.class);
-        verify(authSession).setAuthNote(eq(Constants.VERIFY_EMAIL_CODE), code.capture());
+        verify(authSession).setAuthNote(eq(VerifyEmailByCode.VERIFY_EMAIL_CODE), code.capture());
         assertThat(code.getValue()).matches("^[" + codeSymbols + "]{" + codeLength + "}$");
     }
 
@@ -242,7 +242,7 @@ class VerifyEmailByCodeTest {
     }
 
     @Test
-    public void shouldChallengeWithErrorOnProcessActionWhenCodeIsNotValid() throws EmailException {
+    public void shouldChallengeWithErrorOnProcessActionWhenCodeIsNotValid() {
         initAction();
         when(requiredActionContext.getUser()).thenReturn(user);
         when(user.getEmail()).thenReturn("keycloak@redfroggy.fr");
@@ -253,12 +253,12 @@ class VerifyEmailByCodeTest {
         when(event.detail(Details.EMAIL, user.getEmail())).thenReturn(event);
 
         when(requiredActionContext.getAuthenticationSession()).thenReturn(authSession);
-        when(authSession.getAuthNote(Constants.VERIFY_EMAIL_CODE)).thenReturn("code is valid");
+        when(authSession.getAuthNote(VerifyEmailByCode.VERIFY_EMAIL_CODE)).thenReturn("code is valid");
 
         HttpRequest request = mock(HttpRequest.class);
         when(requiredActionContext.getHttpRequest()).thenReturn(request);
 
-        MultivaluedMap params = new MultivaluedHashMap();
+        MultivaluedMap<String, String> params = new MultivaluedHashMap<>();
         params.add("email_code", "code is not same");
         when(request.getDecodedFormParameters()).thenReturn(params);
 
@@ -271,13 +271,13 @@ class VerifyEmailByCodeTest {
         verify(requiredActionContext).challenge(any());
         verify(event).error("VerifyEmailInvalidCode");
         verify(user, never()).setEmailVerified(true);
-        verify(authSession, never()).removeAuthNote(Constants.VERIFY_EMAIL_CODE);
+        verify(authSession, never()).removeAuthNote(VerifyEmailByCode.VERIFY_EMAIL_CODE);
         verify(event, never()).success();
         verify(requiredActionContext, never()).success();
     }
 
     @Test
-    public void shouldSuccessOnProcessActionWhenCodeIsValid() throws EmailException {
+    public void shouldSuccessOnProcessActionWhenCodeIsValid() {
         initAction();
         when(requiredActionContext.getUser()).thenReturn(user);
         when(user.getEmail()).thenReturn("keycloak@redfroggy.fr");
@@ -288,19 +288,19 @@ class VerifyEmailByCodeTest {
         when(event.detail(Details.EMAIL, user.getEmail())).thenReturn(event);
 
         when(requiredActionContext.getAuthenticationSession()).thenReturn(authSession);
-        when(authSession.getAuthNote(Constants.VERIFY_EMAIL_CODE)).thenReturn("code is valid");
+        when(authSession.getAuthNote(VerifyEmailByCode.VERIFY_EMAIL_CODE)).thenReturn("code is valid");
 
         HttpRequest request = mock(HttpRequest.class);
         when(requiredActionContext.getHttpRequest()).thenReturn(request);
 
-        MultivaluedMap params = new MultivaluedHashMap();
+        MultivaluedMap<String, String> params = new MultivaluedHashMap<>();
         params.add("email_code", "code is valid");
         when(request.getDecodedFormParameters()).thenReturn(params);
 
         action.processAction(requiredActionContext);
 
         verify(user).setEmailVerified(true);
-        verify(authSession).removeAuthNote(Constants.VERIFY_EMAIL_CODE);
+        verify(authSession).removeAuthNote(VerifyEmailByCode.VERIFY_EMAIL_CODE);
         verify(event).success();
         verify(requiredActionContext).success();
     }
