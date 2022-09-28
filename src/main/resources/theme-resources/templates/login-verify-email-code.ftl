@@ -3,7 +3,7 @@
     <#if section = "header">
         ${msg("emailVerifyTitle")}
     <#elseif section = "form">
-        <p class="instruction">${msg("emailVerifyInstruction1")}</p>
+        <p class="instruction">${msg("emailVerifyInstruction1", user.email)}</p>
         <form id="kc-verify-email-code-form" class="${properties.kcFormClass!}" action="${url.loginAction}"
               method="post">
             <div class="${properties.kcFormGroupClass!} ${messagesPerField.printIfExists('email_code',properties.kcFormGroupErrorClass!)}">

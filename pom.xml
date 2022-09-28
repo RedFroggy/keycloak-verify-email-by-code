@@ -4,7 +4,7 @@
 
     <groupId>fr.redfroggy.keycloak</groupId>
     <artifactId>keycloak-verify-email-by-code</artifactId>
-    <version>15.2-SNAPSHOT</version>
+    <version>19.0.0-SNAPSHOT</version>
 
     <name>${project.groupId}:${project.artifactId}</name>
     <description>Action to verify email by code for Keycloak</description>
@@ -55,9 +55,9 @@
         <wildfly.maven.plugin.version>2.0.2.Final</wildfly.maven.plugin.version>
 
         <keycloak.version>19.0.2</keycloak.version>
-        <junit-jupiter.version>5.7.2</junit-jupiter.version>
-        <mockito.version>3.11.0</mockito.version>
-        <assertj.version>3.19.0</assertj.version>
+        <junit-jupiter.version>5.9.1</junit-jupiter.version>
+        <mockito.version>4.8.0</mockito.version>
+        <assertj.version>3.23.1</assertj.version>
     </properties>
 
     <build>

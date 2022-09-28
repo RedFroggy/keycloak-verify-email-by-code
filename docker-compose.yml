@@ -1,45 +1,24 @@
-version: '3'
+version: '3.8'
 services:
-  keycloak:
-    network_mode: host
-    build: .
-    command: [ "-b", "0.0.0.0",
-               "-c", "standalone.xml",
-               "-Dkeycloak.migration.realmName=redfroggy",
-               "-Dkeycloak.migration.usersExportStrategy=DIFFERENT_FILES",
-               "-Dkeycloak.migration.action=import",
-               "-Dkeycloak.migration.provider=dir",
-               "-Dkeycloak.migration.dir=/opt/jboss/keycloak/realm-config/dev",
-               "-Dkeycloak.migration.strategy=OVERWRITE_EXISTING",
-               '-Dkeycloak.profile.feature.upload_scripts=enabled',
-               "-Djboss.socket.binding.port-offset=1000" ]
-    volumes:
-      - ./realm-config:/opt/jboss/keycloak/realm-config
-      - ./standalone/configuration/standalone.xml:/opt/jboss/keycloak/standalone/configuration/standalone.xml
-      - ./src/main/resources/theme-resources/templates/login-verify-email-code.ftl:/opt/jboss/keycloak/themes/base/login/login-verify-email-code.ftl
-    environment:
-      - DB_VENDOR=h2
-      - DB_ADDR=localhost
-      - DB_DATABASE=keycloak
-      - DB_USER=keycloak
-      - DB_PASSWORD=keycloak
-      - DB_PORT=9132
-      - KEYCLOAK_USER=admin
-      - KEYCLOAK_PASSWORD=admin
-      - JDBC_PARAMS=connectTimeout=30
-      - PROXY_ADDRESS_FORWARDING=true
-#      - KEYCLOAK_LOGLEVEL=DEBUG
-#    ports:
-#      - 9080:9080
-#      - 9443:9443
-#      - 10990:10990
-#    dns:
-#      - 8.8.8.8
-#      - 8.8.4.4
+    keycloak:
+        image: quay.io/keycloak/keycloak:19.0.2
+        command: [ 'start-dev --import-realm',
+                   '--debug',
+                   '--spi-required-action-VERIFY_EMAIL_CODE-code-length=5' ]
+        volumes:
+            - ./realm-config/local:/opt/keycloak/data/import
+            - ./target/keycloak-verify-email-by-code-19.0.0-SNAPSHOT.jar:/opt/keycloak/providers/keycloak-verify-email-by-code.jar
 
-#networks:
-#  default:
-#    ipam:
-#      driver: default
-#      config:
-#        - subnet: 172.28.0.0/16
+        environment:
+            - KC_DB=dev-file
+            - KEYCLOAK_ADMIN=admin
+            - KEYCLOAK_ADMIN_PASSWORD=admin
+            - DEBUG=true
+            - KC_FEATURES=scripts
+            - KC_HTTP_PORT=9080
+            - KC_HTTPS_PORT=9443
+        # If you want to expose these ports outside your dev PC,
+        # remove the "127.0.0.1:" prefix
+        ports:
+            - 127.0.0.1:9080:9080
+            - 127.0.0.1:9443:9443

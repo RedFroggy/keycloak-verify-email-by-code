@@ -17,13 +17,6 @@
 
 package fr.redfroggy.keycloak.requiredactions;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriBuilderException;
-
 import org.jboss.logging.Logger;
 import org.keycloak.Config;
 import org.keycloak.authentication.RequiredActionContext;
@@ -32,6 +25,7 @@ import org.keycloak.authentication.RequiredActionProvider;
 import org.keycloak.common.util.SecretGenerator;
 import org.keycloak.email.EmailException;
 import org.keycloak.email.EmailTemplateProvider;
+import org.keycloak.email.freemarker.beans.ProfileBean;
 import org.keycloak.events.Details;
 import org.keycloak.events.Errors;
 import org.keycloak.events.EventBuilder;
@@ -42,21 +36,30 @@ import org.keycloak.models.KeycloakSessionFactory;
 import org.keycloak.models.RealmModel;
 import org.keycloak.models.UserModel;
 import org.keycloak.models.utils.FormMessage;
+import org.keycloak.provider.ServerInfoAwareProviderFactory;
 import org.keycloak.services.validation.Validation;
 import org.keycloak.sessions.AuthenticationSessionModel;
+
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriBuilderException;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * @author <a href="mailto:bill@burkecentral.com">Bill Burke</a>
  * @version $Revision: 1 $
  */
-public class VerifyEmailByCode implements RequiredActionProvider, RequiredActionFactory {
+public class VerifyEmailByCode implements RequiredActionProvider, RequiredActionFactory, ServerInfoAwareProviderFactory {
     private static final Logger logger = Logger.getLogger(VerifyEmailByCode.class);
     public static final String VERIFY_EMAIL_CODE = "VERIFY_EMAIL_CODE";
     public static final String EMAIL_CODE = "email_code";
     public static final String INVALID_CODE = "VerifyEmailInvalidCode";
     public static final String LOGIN_VERIFY_EMAIL_CODE_TEMPLATE = "login-verify-email-code.ftl";
-    public static final String CONFIG_CODE_LENGTH = "codeLength";
-    public static final String CONFIG_CODE_SYMBOLS = "codeSymbols";
+    public static final String CONFIG_CODE_LENGTH = "code-length";
+    public static final String CONFIG_CODE_SYMBOLS = "code-symbols";
     public static final int DEFAULT_CODE_LENGTH = 8;
     public static final String DEFAULT_CODE_SYMBOLS = String.valueOf(SecretGenerator.ALPHANUM);
     private int codeLength;
@@ -74,6 +77,7 @@ public class VerifyEmailByCode implements RequiredActionProvider, RequiredAction
     @Override
     public void requiredActionChallenge(RequiredActionContext context) {
         if (context.getUser().isEmailVerified()) {
+            context.getAuthenticationSession().removeAuthNote(VERIFY_EMAIL_CODE);
             context.success();
             return;
         }
@@ -101,10 +105,7 @@ public class VerifyEmailByCode implements RequiredActionProvider, RequiredAction
         String emailCode = formData.getFirst(EMAIL_CODE);
 
         if (!code.equals(emailCode)) {
-            Response challenge = context.form()
-                    .addError(new FormMessage(EMAIL_CODE, INVALID_CODE))
-                    .createForm(LOGIN_VERIFY_EMAIL_CODE_TEMPLATE);
-            context.challenge(challenge);
+            createFormChallenge(context, new FormMessage(EMAIL_CODE, INVALID_CODE));
             event.error(INVALID_CODE);
             return;
         }
@@ -114,6 +115,16 @@ public class VerifyEmailByCode implements RequiredActionProvider, RequiredAction
         context.success();
     }
 
+    private static void createFormChallenge(RequiredActionContext context, FormMessage errorMessage) {
+        LoginFormsProvider loginFormsProvider = context.form();
+        if (Objects.nonNull(errorMessage)) {
+            loginFormsProvider = loginFormsProvider.addError(new FormMessage(EMAIL_CODE, INVALID_CODE));
+        }
+        Response challenge = loginFormsProvider
+                .setAttribute("user", new ProfileBean(context.getUser()))
+                .createForm(LOGIN_VERIFY_EMAIL_CODE_TEMPLATE);
+        context.challenge(challenge);
+    }
 
     @Override
     public RequiredActionProvider create(KeycloakSession session) {
@@ -168,9 +179,7 @@ public class VerifyEmailByCode implements RequiredActionProvider, RequiredAction
             form.setError(Errors.EMAIL_SEND_FAILED);
         }
 
-        Response challenge = form
-                .createForm(LOGIN_VERIFY_EMAIL_CODE_TEMPLATE);
-        context.challenge(challenge);
+        createFormChallenge(context, null);
     }
 
     @Override
@@ -178,5 +187,13 @@ public class VerifyEmailByCode implements RequiredActionProvider, RequiredAction
 
         logger.info("Retrieved display text for VerifyEmailByCode");
         return "Verify Email by code";
+    }
+
+    @Override
+    public Map<String, String> getOperationalInfo() {
+        Map<String, String> ret = new LinkedHashMap<>();
+        ret.put(VERIFY_EMAIL_CODE + "." + CONFIG_CODE_LENGTH, String.valueOf(codeLength));
+        ret.put(VERIFY_EMAIL_CODE + "." + CONFIG_CODE_SYMBOLS, codeSymbols);
+        return ret;
     }
 }
