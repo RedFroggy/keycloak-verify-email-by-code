@@ -7,12 +7,16 @@ import org.keycloak.Config;
 import org.keycloak.authentication.RequiredActionContext;
 import org.keycloak.email.EmailException;
 import org.keycloak.email.EmailTemplateProvider;
+import org.keycloak.email.freemarker.beans.ProfileBean;
 import org.keycloak.events.Details;
 import org.keycloak.events.Errors;
 import org.keycloak.events.EventBuilder;
 import org.keycloak.events.EventType;
 import org.keycloak.forms.login.LoginFormsProvider;
-import org.keycloak.models.*;
+import org.keycloak.models.KeycloakContext;
+import org.keycloak.models.KeycloakSession;
+import org.keycloak.models.RealmModel;
+import org.keycloak.models.UserModel;
 import org.keycloak.sessions.AuthenticationSessionModel;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -110,11 +114,13 @@ class VerifyEmailByCodeTest {
     public void shouldReturnSuccessOnChallengeWhenEmailIsVerified() {
         initAction();
         when(requiredActionContext.getUser()).thenReturn(user);
+        when(requiredActionContext.getAuthenticationSession()).thenReturn(authSession);
 
         when(user.isEmailVerified()).thenReturn(true);
         action.requiredActionChallenge(requiredActionContext);
 
         verify(requiredActionContext).success();
+        verify(authSession).removeAuthNote(VERIFY_EMAIL_CODE);
     }
 
     @Test
@@ -199,6 +205,7 @@ class VerifyEmailByCodeTest {
         when(templateProvider.setRealm(realm)).thenReturn(templateProvider);
         when(templateProvider.setUser(user)).thenReturn(templateProvider);
 
+        when(form.setAttribute(eq("user"), any(ProfileBean.class))).thenReturn(form);
         when(form.createForm(LOGIN_VERIFY_EMAIL_CODE_TEMPLATE)).thenReturn(response);
     }
 
@@ -264,6 +271,7 @@ class VerifyEmailByCodeTest {
 
         when(requiredActionContext.form()).thenReturn(form);
         when(form.addError(any())).thenReturn(form);
+        when(form.setAttribute(eq("user"), any(ProfileBean.class))).thenReturn(form);
         when(form.createForm(LOGIN_VERIFY_EMAIL_CODE_TEMPLATE)).thenReturn(response);
 
         action.processAction(requiredActionContext);

@@ -4,13 +4,13 @@
     {
       "id": "965cb638-fe35-4d9e-8800-a544f3afc7f6",
       "createdTimestamp": 1505479373742,
-      "username": "dej",
+      "username": "guest",
       "enabled": true,
       "totp": false,
       "emailVerified": true,
-      "firstName": "david",
-      "lastName": "jay",
-      "email": "david.jay@redfroggy.fr",
+      "firstName": "guest",
+      "lastName": "guest",
+      "email": "guest@redfroggy.fr",
       "credentials": [
         {
           "type": "password",
@@ -34,11 +34,7 @@
         ]
       },
       "notBefore": 0,
-      "groups": [
-        "/Staff",
-        "/Members",
-        "/Admins"
-      ]
+      "groups": []
     }
   ]
 }

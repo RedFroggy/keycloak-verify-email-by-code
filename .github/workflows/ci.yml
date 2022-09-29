@@ -3,7 +3,8 @@ name: Keycloak Verify email by code RedFroggy CI
 on:
   push:
     branches:
-      - "**"
+      - "master"
+      - "main"
     tags-ignore:
       - "**"
   pull_request:

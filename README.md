@@ -13,28 +13,36 @@ This [Keycloak](https://www.keycloak.org) plugin adds a required action to verif
 
 ## Compatibility
 
-The version 15.x of this plugin is compatible with Keycloak `15.1.1` and higher.
+The version 19.0.x of this plugin is compatible with Keycloak `19.0.x` and higher.
 
-## Installation
+## How to install?
 
-The plugin installation is simple and can be done without a Keycloak server restart.
+Download a release (*.jar file) that works with your Keycloak version from
+the [list of releases](https://github.com/RedFroggy/keycloak-verify-email-by-code/releases).
 
-* Download the latest release from
-  the [releases page](https://github.com/RedFroggy/keycloak-verify-email-by-code/releases)
-* Copy the JAR file into the `standalone/deployments` directory in your Keycloak server's root
-* Restart Keycloak (optional, hot deployment should work)
+### Server
 
-You can also clone the Github Repository and install the plugin locally with the following command:
+Copy the jar to the `providers` folder and execute the following command:
 
+```shell
+${kc.home.dir}/bin/kc.sh build
 ```
-$ mvn clean install wildfly:deploy
-```
+
+### Maven
+
+You can also clone the Github Repository and install the plugin locally.
+
+### Container image (Docker)
+
+For Docker-based setups mount or copy the jar to `/opt/keycloak/providers`.
+
+You may want to check [docker-compose.yml](docker-compose.yml) as an example.
 
 ## How to use it
 
 ### Requirements
 
-Verify required action is deploy in keycloak. Got to {keycloak url}/auth/admin/master/console/#/server-info/providers.
+Verify required action is deploy in keycloak. Got to {keycloak url}/admin/master/console/#/master/providers.
 
 ![server-info_providers](/assets/server-info_providers.png)
 
@@ -62,22 +70,14 @@ themes/mytheme/login
 #### Code length and symbols
 
 Verify email code is generated using `org.keycloak.common.util.RandomString`. By default generated code will be 8 characters long and will use alphanumeric symbols. You may customize this behavior using SPI configuration in your `standalone.xml` file:
-- property `codeLength` is a numeric value representing the number of symbols, defaults to `8`
-- property `codeSymbols` is a string value listing all accepted symbols, defaults to `RandomString.alphanum`
+
+- property `code-length` is a numeric value representing the number of symbols, defaults to `8`
+- property `code-symbols` is a string value listing all accepted symbols, defaults to `RandomString.alphanum`
 
 e.g. configure action to generate a code of 6 digits :
-```xml
-<subsystem xmlns="urn:jboss:domain:keycloak-server:1.1">
-    [...]
-    <spi name="required-action">
-        <provider name="VERIFY_EMAIL_CODE" enabled="true">
-            <properties>
-                <property name="codeLength" value="6"/>
-                <property name="codeSymbols" value="0123456789"/>
-            </properties>
-        </provider>
-    </spi>
-</subsystem>
+
+```shell
+bin/kc.[sh|bat] start --spi-required-action-VERIFY_EMAIL_CODE-code-length=6 --spi-required-action-VERIFY_EMAIL_CODE-code-symbols=0123456789 
 ```
 
 ## Q&A
