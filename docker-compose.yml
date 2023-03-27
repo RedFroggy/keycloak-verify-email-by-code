@@ -1,14 +1,13 @@
 version: '3.8'
 services:
     keycloak:
-        image: quay.io/keycloak/keycloak:19.0.2
+        image: quay.io/keycloak/keycloak:21.0
         command: [ 'start-dev --import-realm',
                    '--debug',
                    '--spi-required-action-VERIFY_EMAIL_CODE-code-length=5' ]
         volumes:
             - ./realm-config/local:/opt/keycloak/data/import
-            - ./target/keycloak-verify-email-by-code-19.0.0-SNAPSHOT.jar:/opt/keycloak/providers/keycloak-verify-email-by-code.jar
-
+            - ./target/keycloak-verify-email-by-code-21.0.0-SNAPSHOT.jar:/opt/keycloak/providers/keycloak-verify-email-by-code.jar
         environment:
             - KC_DB=dev-file
             - KEYCLOAK_ADMIN=admin
@@ -22,3 +21,10 @@ services:
         ports:
             - 127.0.0.1:9080:9080
             - 127.0.0.1:9443:9443
+    mailhog:
+        image: mailhog/mailhog
+        logging:
+            driver: 'none'  # disable saving logs
+        ports:
+            - 1025:1025 # smtp server
+            - 8025:8025 # web ui

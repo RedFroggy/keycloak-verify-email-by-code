@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.keycloak.Config;
 import org.keycloak.authentication.RequiredActionContext;
+import org.keycloak.common.util.ResteasyProvider;
 import org.keycloak.email.EmailException;
 import org.keycloak.email.EmailTemplateProvider;
 import org.keycloak.email.freemarker.beans.ProfileBean;
@@ -64,12 +65,6 @@ class VerifyEmailByCodeTest {
     private Config.Scope config;
 
     private final VerifyEmailByCode action = new VerifyEmailByCode();
-
-
-    @Test
-    public void shouldReturnThisWhenCreate() {
-        assertThat(action.create(session)).isEqualTo(action);
-    }
 
     @Test
     public void shouldReturnGetId() {
@@ -262,8 +257,10 @@ class VerifyEmailByCodeTest {
         when(requiredActionContext.getAuthenticationSession()).thenReturn(authSession);
         when(authSession.getAuthNote(VerifyEmailByCode.VERIFY_EMAIL_CODE)).thenReturn("code is valid");
 
+        ResteasyProvider resteasyProvider = mock(ResteasyProvider.class);
+        action.setResteasyProvider(resteasyProvider);
         HttpRequest request = mock(HttpRequest.class);
-        when(requiredActionContext.getHttpRequest()).thenReturn(request);
+        when(resteasyProvider.getContextData(HttpRequest.class)).thenReturn(request);
 
         MultivaluedMap<String, String> params = new MultivaluedHashMap<>();
         params.add("email_code", "code is not same");
@@ -298,8 +295,10 @@ class VerifyEmailByCodeTest {
         when(requiredActionContext.getAuthenticationSession()).thenReturn(authSession);
         when(authSession.getAuthNote(VerifyEmailByCode.VERIFY_EMAIL_CODE)).thenReturn("code is valid");
 
+        ResteasyProvider resteasyProvider = mock(ResteasyProvider.class);
+        action.setResteasyProvider(resteasyProvider);
         HttpRequest request = mock(HttpRequest.class);
-        when(requiredActionContext.getHttpRequest()).thenReturn(request);
+        when(resteasyProvider.getContextData(HttpRequest.class)).thenReturn(request);
 
         MultivaluedMap<String, String> params = new MultivaluedHashMap<>();
         params.add("email_code", "code is valid");

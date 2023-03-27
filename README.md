@@ -13,7 +13,7 @@ This [Keycloak](https://www.keycloak.org) plugin adds a required action to verif
 
 ## Compatibility
 
-The version 19.0.x of this plugin is compatible with Keycloak `19.0.x` and higher.
+The version 21.0.x of this plugin is compatible with Keycloak `21.0.x` and higher.
 
 ## How to install?
 
