@@ -4,7 +4,7 @@
 
     <groupId>fr.redfroggy.keycloak</groupId>
     <artifactId>keycloak-verify-email-by-code</artifactId>
-    <version>21.0.0</version>
+    <version>21.0.1-SNAPSHOT</version>
 
     <name>${project.groupId}:${project.artifactId}</name>
     <description>Action to verify email by code for Keycloak</description>
