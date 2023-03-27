@@ -18,10 +18,13 @@
 package fr.redfroggy.keycloak.requiredactions;
 
 import org.jboss.logging.Logger;
+import org.jboss.resteasy.spi.HttpRequest;
 import org.keycloak.Config;
 import org.keycloak.authentication.RequiredActionContext;
 import org.keycloak.authentication.RequiredActionFactory;
 import org.keycloak.authentication.RequiredActionProvider;
+import org.keycloak.common.util.Resteasy;
+import org.keycloak.common.util.ResteasyProvider;
 import org.keycloak.common.util.SecretGenerator;
 import org.keycloak.email.EmailException;
 import org.keycloak.email.EmailTemplateProvider;
@@ -65,6 +68,8 @@ public class VerifyEmailByCode implements RequiredActionProvider, RequiredAction
     private int codeLength;
     private String codeSymbols;
 
+    private ResteasyProvider resteasyProvider;
+
     @Override
     public void evaluateTriggers(RequiredActionContext context) {
         if (context.getRealm().isVerifyEmail()
@@ -101,7 +106,7 @@ public class VerifyEmailByCode implements RequiredActionProvider, RequiredAction
             return;
         }
 
-        MultivaluedMap<String, String> formData = context.getHttpRequest().getDecodedFormParameters();
+        MultivaluedMap<String, String> formData = resteasyProvider.getContextData(HttpRequest.class).getDecodedFormParameters();
         String emailCode = formData.getFirst(EMAIL_CODE);
 
         if (!code.equals(emailCode)) {
@@ -128,7 +133,12 @@ public class VerifyEmailByCode implements RequiredActionProvider, RequiredAction
 
     @Override
     public RequiredActionProvider create(KeycloakSession session) {
+        setResteasyProvider(Resteasy.getProvider());
         return this;
+    }
+
+    void setResteasyProvider(ResteasyProvider resteasyProvider) {
+        this.resteasyProvider = resteasyProvider;
     }
 
     @Override
