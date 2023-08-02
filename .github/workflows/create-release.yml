@@ -1,9 +1,7 @@
-name: Keycloak Verify email by code Tag
+name: create tag/release
 
 on:
-  push:
-    tags:
-      - "*"
+  workflow_dispatch:
 
 jobs:
   build:
@@ -27,14 +25,22 @@ jobs:
           with:
             java-version: 17
 
-      - id: get_version
-        run: echo ::set-output name=VERSION::$(echo $GITHUB_REF | cut -d / -f 3)
+      -   name: Set Release version
+          run: |
+            mvn versions:set -DremoveSnapshot -DgenerateBackupPoms=false
 
-      - name: Set current version
-        run: mvn -B versions:set -DnewVersion=${{ steps.get_version.outputs.VERSION }}
+      -   name: Get pom version
+          id: get_version
+          run: |
+            echo ::set-output name=VERSION::$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
 
       - name: Build with Maven
         run: mvn -B clean verify
+
+      -   uses: rickstaa/action-create-tag@v1
+          id: "tag_create"
+          with:
+            tag: ${{ steps.get_version.outputs.VERSION }}
 
       - name: Upload jar
         uses: actions/upload-artifact@v2
