@@ -1,5 +1,8 @@
 package fr.redfroggy.keycloak.requiredactions;
 
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.Response;
 import org.jboss.resteasy.spi.HttpRequest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,10 +25,6 @@ import org.keycloak.sessions.AuthenticationSessionModel;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
 
 import static fr.redfroggy.keycloak.requiredactions.VerifyEmailByCode.*;
 import static org.assertj.core.api.Assertions.assertThat;
