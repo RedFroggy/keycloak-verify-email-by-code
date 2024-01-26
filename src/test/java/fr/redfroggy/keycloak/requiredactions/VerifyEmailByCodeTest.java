@@ -3,12 +3,10 @@ package fr.redfroggy.keycloak.requiredactions;
 import jakarta.ws.rs.core.MultivaluedHashMap;
 import jakarta.ws.rs.core.MultivaluedMap;
 import jakarta.ws.rs.core.Response;
-import org.jboss.resteasy.spi.HttpRequest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.keycloak.Config;
 import org.keycloak.authentication.RequiredActionContext;
-import org.keycloak.common.util.ResteasyProvider;
 import org.keycloak.email.EmailException;
 import org.keycloak.email.EmailTemplateProvider;
 import org.keycloak.email.freemarker.beans.ProfileBean;
@@ -17,6 +15,7 @@ import org.keycloak.events.Errors;
 import org.keycloak.events.EventBuilder;
 import org.keycloak.events.EventType;
 import org.keycloak.forms.login.LoginFormsProvider;
+import org.keycloak.http.HttpRequest;
 import org.keycloak.models.KeycloakContext;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.RealmModel;
@@ -33,37 +32,27 @@ import static org.mockito.Mockito.*;
 @ExtendWith({MockitoExtension.class})
 class VerifyEmailByCodeTest {
 
+    private final VerifyEmailByCode action = new VerifyEmailByCode();
     @Mock
     private RealmModel realm;
-
     @Mock
     private UserModel user;
-
     @Mock
     private KeycloakSession session;
-
     @Mock
     private EventBuilder event;
-
     @Mock
     private AuthenticationSessionModel authSession;
-
     @Mock
     private LoginFormsProvider form;
-
     @Mock
     private EmailTemplateProvider templateProvider;
-
     @Mock
     private Response response;
-
     @Mock
     private RequiredActionContext requiredActionContext;
-
     @Mock
     private Config.Scope config;
-
-    private final VerifyEmailByCode action = new VerifyEmailByCode();
 
     @Test
     public void shouldReturnGetId() {
@@ -256,10 +245,8 @@ class VerifyEmailByCodeTest {
         when(requiredActionContext.getAuthenticationSession()).thenReturn(authSession);
         when(authSession.getAuthNote(VerifyEmailByCode.VERIFY_EMAIL_CODE)).thenReturn("code is valid");
 
-        ResteasyProvider resteasyProvider = mock(ResteasyProvider.class);
-        action.setResteasyProvider(resteasyProvider);
         HttpRequest request = mock(HttpRequest.class);
-        when(resteasyProvider.getContextData(HttpRequest.class)).thenReturn(request);
+        when(requiredActionContext.getHttpRequest()).thenReturn(request);
 
         MultivaluedMap<String, String> params = new MultivaluedHashMap<>();
         params.add("email_code", "code is not same");
@@ -294,10 +281,8 @@ class VerifyEmailByCodeTest {
         when(requiredActionContext.getAuthenticationSession()).thenReturn(authSession);
         when(authSession.getAuthNote(VerifyEmailByCode.VERIFY_EMAIL_CODE)).thenReturn("code is valid");
 
-        ResteasyProvider resteasyProvider = mock(ResteasyProvider.class);
-        action.setResteasyProvider(resteasyProvider);
         HttpRequest request = mock(HttpRequest.class);
-        when(resteasyProvider.getContextData(HttpRequest.class)).thenReturn(request);
+        when(requiredActionContext.getHttpRequest()).thenReturn(request);
 
         MultivaluedMap<String, String> params = new MultivaluedHashMap<>();
         params.add("email_code", "code is valid");

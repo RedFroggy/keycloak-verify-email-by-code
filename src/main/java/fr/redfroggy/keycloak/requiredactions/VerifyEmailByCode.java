@@ -21,13 +21,10 @@ import jakarta.ws.rs.core.MultivaluedMap;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilderException;
 import org.jboss.logging.Logger;
-import org.jboss.resteasy.spi.HttpRequest;
 import org.keycloak.Config;
 import org.keycloak.authentication.RequiredActionContext;
 import org.keycloak.authentication.RequiredActionFactory;
 import org.keycloak.authentication.RequiredActionProvider;
-import org.keycloak.common.util.Resteasy;
-import org.keycloak.common.util.ResteasyProvider;
 import org.keycloak.common.util.SecretGenerator;
 import org.keycloak.email.EmailException;
 import org.keycloak.email.EmailTemplateProvider;
@@ -56,7 +53,6 @@ import java.util.Objects;
  * @version $Revision: 1 $
  */
 public class VerifyEmailByCode implements RequiredActionProvider, RequiredActionFactory, ServerInfoAwareProviderFactory {
-    private static final Logger logger = Logger.getLogger(VerifyEmailByCode.class);
     public static final String VERIFY_EMAIL_CODE = "VERIFY_EMAIL_CODE";
     public static final String EMAIL_CODE = "email_code";
     public static final String INVALID_CODE = "VerifyEmailInvalidCode";
@@ -65,10 +61,20 @@ public class VerifyEmailByCode implements RequiredActionProvider, RequiredAction
     public static final String CONFIG_CODE_SYMBOLS = "code-symbols";
     public static final int DEFAULT_CODE_LENGTH = 8;
     public static final String DEFAULT_CODE_SYMBOLS = String.valueOf(SecretGenerator.ALPHANUM);
+    private static final Logger logger = Logger.getLogger(VerifyEmailByCode.class);
     private int codeLength;
     private String codeSymbols;
 
-    private ResteasyProvider resteasyProvider;
+    private static void createFormChallenge(RequiredActionContext context, FormMessage errorMessage) {
+        LoginFormsProvider loginFormsProvider = context.form();
+        if (Objects.nonNull(errorMessage)) {
+            loginFormsProvider = loginFormsProvider.addError(new FormMessage(EMAIL_CODE, INVALID_CODE));
+        }
+        Response challenge = loginFormsProvider
+                .setAttribute("user", new ProfileBean(context.getUser()))
+                .createForm(LOGIN_VERIFY_EMAIL_CODE_TEMPLATE);
+        context.challenge(challenge);
+    }
 
     @Override
     public void evaluateTriggers(RequiredActionContext context) {
@@ -96,7 +102,6 @@ public class VerifyEmailByCode implements RequiredActionProvider, RequiredAction
         sendVerifyEmailAndCreateForm(context);
     }
 
-
     @Override
     public void processAction(RequiredActionContext context) {
         EventBuilder event = context.getEvent().clone().event(EventType.VERIFY_EMAIL).detail(Details.EMAIL, context.getUser().getEmail());
@@ -105,8 +110,7 @@ public class VerifyEmailByCode implements RequiredActionProvider, RequiredAction
             requiredActionChallenge(context);
             return;
         }
-
-        MultivaluedMap<String, String> formData = resteasyProvider.getContextData(HttpRequest.class).getDecodedFormParameters();
+        MultivaluedMap<String, String> formData = context.getHttpRequest().getDecodedFormParameters();
         String emailCode = formData.getFirst(EMAIL_CODE);
 
         if (!code.equals(emailCode)) {
@@ -120,25 +124,9 @@ public class VerifyEmailByCode implements RequiredActionProvider, RequiredAction
         context.success();
     }
 
-    private static void createFormChallenge(RequiredActionContext context, FormMessage errorMessage) {
-        LoginFormsProvider loginFormsProvider = context.form();
-        if (Objects.nonNull(errorMessage)) {
-            loginFormsProvider = loginFormsProvider.addError(new FormMessage(EMAIL_CODE, INVALID_CODE));
-        }
-        Response challenge = loginFormsProvider
-                .setAttribute("user", new ProfileBean(context.getUser()))
-                .createForm(LOGIN_VERIFY_EMAIL_CODE_TEMPLATE);
-        context.challenge(challenge);
-    }
-
     @Override
     public RequiredActionProvider create(KeycloakSession session) {
-        setResteasyProvider(Resteasy.getProvider());
         return this;
-    }
-
-    void setResteasyProvider(ResteasyProvider resteasyProvider) {
-        this.resteasyProvider = resteasyProvider;
     }
 
     @Override
