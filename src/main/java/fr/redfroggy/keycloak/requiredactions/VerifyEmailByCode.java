@@ -71,7 +71,7 @@ public class VerifyEmailByCode implements RequiredActionProvider, RequiredAction
             loginFormsProvider = loginFormsProvider.addError(new FormMessage(EMAIL_CODE, INVALID_CODE));
         }
         Response challenge = loginFormsProvider
-                .setAttribute("user", new ProfileBean(context.getUser()))
+                .setAttribute("user", new ProfileBean(context.getUser(), context.getSession()))
                 .createForm(LOGIN_VERIFY_EMAIL_CODE_TEMPLATE);
         context.challenge(challenge);
     }
@@ -182,7 +182,6 @@ public class VerifyEmailByCode implements RequiredActionProvider, RequiredAction
 
     @Override
     public String getDisplayText() {
-
         logger.info("Retrieved display text for VerifyEmailByCode");
         return "Verify Email by code";
     }
