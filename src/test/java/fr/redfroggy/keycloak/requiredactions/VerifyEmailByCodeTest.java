@@ -21,6 +21,7 @@ import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.RealmModel;
 import org.keycloak.models.UserModel;
 import org.keycloak.sessions.AuthenticationSessionModel;
+import org.keycloak.userprofile.UserProfileProvider;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -37,6 +38,8 @@ class VerifyEmailByCodeTest {
     private RealmModel realm;
     @Mock
     private UserModel user;
+    @Mock
+    private UserProfileProvider provider;
     @Mock
     private KeycloakSession session;
     @Mock
@@ -167,7 +170,7 @@ class VerifyEmailByCodeTest {
     private void mockChallenge() {
         when(requiredActionContext.getUser()).thenReturn(user);
         when(user.getEmail()).thenReturn("keycloak@redfroggy.fr");
-
+        when(session.getProvider(UserProfileProvider.class)).thenReturn(provider);
         when(requiredActionContext.getSession()).thenReturn(session);
 
         when(requiredActionContext.getEvent()).thenReturn(event);
@@ -235,6 +238,8 @@ class VerifyEmailByCodeTest {
     public void shouldChallengeWithErrorOnProcessActionWhenCodeIsNotValid() {
         initAction();
         when(requiredActionContext.getUser()).thenReturn(user);
+        when(session.getProvider(UserProfileProvider.class)).thenReturn(provider);
+        when(requiredActionContext.getSession()).thenReturn(session);
         when(user.getEmail()).thenReturn("keycloak@redfroggy.fr");
 
         when(requiredActionContext.getEvent()).thenReturn(event);
@@ -243,6 +248,7 @@ class VerifyEmailByCodeTest {
         when(event.detail(Details.EMAIL, user.getEmail())).thenReturn(event);
 
         when(requiredActionContext.getAuthenticationSession()).thenReturn(authSession);
+
         when(authSession.getAuthNote(VerifyEmailByCode.VERIFY_EMAIL_CODE)).thenReturn("code is valid");
 
         HttpRequest request = mock(HttpRequest.class);

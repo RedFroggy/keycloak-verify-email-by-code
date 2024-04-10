@@ -1,14 +1,14 @@
 version: '3.8'
 services:
     keycloak:
-        image: quay.io/keycloak/keycloak:23.0
+        image: quay.io/keycloak/keycloak:24.0
         command: [ 'start-dev',
                    '--import-realm',
                    '--debug',
                    '--spi-required-action-VERIFY_EMAIL_CODE-code-length=5' ]
         volumes:
             - ./realm-config/local:/opt/keycloak/data/import
-            - ./target/keycloak-verify-email-by-code-23.0.0-SNAPSHOT.jar:/opt/keycloak/providers/keycloak-verify-email-by-code.jar
+            - ./target/keycloak-verify-email-by-code-24.0.0-SNAPSHOT.jar:/opt/keycloak/providers/keycloak-verify-email-by-code.jar
         environment:
             - KC_DB=dev-file
             - KEYCLOAK_ADMIN=admin
