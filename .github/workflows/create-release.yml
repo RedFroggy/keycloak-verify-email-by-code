@@ -38,11 +38,6 @@ jobs:
       - name: Build with Maven
         run: mvn -B clean verify
 
-      -   uses: rickstaa/action-create-tag@v1
-          id: "tag_create"
-          with:
-            tag: ${{ steps.get_version.outputs.VERSION }}
-
       - name: Upload jar
         uses: actions/upload-artifact@v4
         with:
