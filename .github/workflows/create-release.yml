@@ -43,7 +43,7 @@ jobs:
             tag: ${{ steps.get_version.outputs.VERSION }}
 
       - name: Upload jar
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: jar
           path: target/*.jar
@@ -53,51 +53,24 @@ jobs:
     name: Create Release
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout artifact
-        uses: actions/download-artifact@v2
-        with:
-          name: jar
-          path: target
+      -   name: Checkout artifact
+          uses: actions/download-artifact@v4
+          with:
+            name: jar
+            path: target
 
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ needs.build.outputs.version }}
-          release_name: ${{ needs.build.outputs.version }}
-          body: |
-            ${{github.event.head_commit.message}}
-          draft: false
-          prerelease: false
-
-      - name: Upload Release javadoc
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./target/keycloak-verify-email-by-code-${{ needs.build.outputs.version }}-javadoc.jar
-          asset_name: keycloak-verify-email-by-code-${{ needs.build.outputs.version }}-javadoc.jar
-          asset_content_type: jar
-
-      - name: Upload Release sources
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./target/keycloak-verify-email-by-code-${{ needs.build.outputs.version }}-sources.jar
-          asset_name: keycloak-verify-email-by-code-${{ needs.build.outputs.version }}-sources.jar
-          asset_content_type: jar
-
-      - name: Upload Release
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./target/keycloak-verify-email-by-code-${{ needs.build.outputs.version }}.jar
-          asset_name: keycloak-verify-email-by-code-${{ needs.build.outputs.version }}.jar
-          asset_content_type: jar
+      -   name: Create GitHub Release
+          id: create_release
+          uses: softprops/action-gh-release@v2
+          with:
+            draft: false
+            prerelease: false
+            token: ${{ secrets.GITHUB_TOKEN }}
+            tag_name: v${{ needs.build.outputs.version }}
+            name: Release v${{ needs.build.outputs.version }}
+            files: |
+              ./target/keycloak-verify-email-by-code-${{ needs.build.outputs.version }}-javadoc.jar
+              ./target/keycloak-verify-email-by-code-${{ needs.build.outputs.version }}-sources.jar
+              ./target/keycloak-verify-email-by-code-${{ needs.build.outputs.version }}.jar
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
