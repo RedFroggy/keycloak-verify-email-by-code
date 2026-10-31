@@ -65,11 +65,8 @@ class VerifyEmailByCodeTest {
     @Test
     public void shouldTriggerActionWhenRealmIsEnableAndUserNotVerified() {
         initAction();
-        when(requiredActionContext.getRealm()).thenReturn(realm);
-        when(requiredActionContext.getUser()).thenReturn(user);
-
-        when(realm.isVerifyEmail()).thenReturn(true);
-        when(user.isEmailVerified()).thenReturn(false);
+        setupRealmModelIsVerifyEmailAndGetRealmStubs(true);
+        setupRequiredActionContextGetUserAndIsEmailVerifiedStubs(false);
         action.evaluateTriggers(requiredActionContext);
         verify(user).addRequiredAction(VERIFY_EMAIL_CODE);
     }
@@ -77,8 +74,7 @@ class VerifyEmailByCodeTest {
     @Test
     public void shouldNotTriggerActionWhenRealmIsDisable() {
         initAction();
-        when(requiredActionContext.getRealm()).thenReturn(realm);
-        when(realm.isVerifyEmail()).thenReturn(false);
+        setupRealmModelIsVerifyEmailAndGetRealmStubs(false);
 
         action.evaluateTriggers(requiredActionContext);
         verify(user, never()).addRequiredAction(VERIFY_EMAIL_CODE);
@@ -87,11 +83,8 @@ class VerifyEmailByCodeTest {
     @Test
     public void shouldNotTriggerActionWhenRealmIsEnableAndUserIsVerified() {
         initAction();
-        when(requiredActionContext.getRealm()).thenReturn(realm);
-        when(requiredActionContext.getUser()).thenReturn(user);
-
-        when(realm.isVerifyEmail()).thenReturn(true);
-        when(user.isEmailVerified()).thenReturn(true);
+        setupRealmModelIsVerifyEmailAndGetRealmStubs(true);
+        setupRequiredActionContextGetUserAndIsEmailVerifiedStubs(true);
         action.evaluateTriggers(requiredActionContext);
         verify(user, never()).addRequiredAction(VERIFY_EMAIL_CODE);
     }
@@ -99,10 +92,9 @@ class VerifyEmailByCodeTest {
     @Test
     public void shouldReturnSuccessOnChallengeWhenEmailIsVerified() {
         initAction();
-        when(requiredActionContext.getUser()).thenReturn(user);
+        setupRequiredActionContextGetUserAndIsEmailVerifiedStubs(true);
         when(requiredActionContext.getAuthenticationSession()).thenReturn(authSession);
 
-        when(user.isEmailVerified()).thenReturn(true);
         action.requiredActionChallenge(requiredActionContext);
 
         verify(requiredActionContext).success();
@@ -214,15 +206,7 @@ class VerifyEmailByCodeTest {
     @Test
     public void shouldChallengeOnProcessActionWhenCodeIsNull() throws EmailException {
         initAction();
-        when(requiredActionContext.getUser()).thenReturn(user);
-        when(user.getEmail()).thenReturn("keycloak@redfroggy.fr");
-
-        when(requiredActionContext.getEvent()).thenReturn(event);
-        when(event.clone()).thenReturn(event);
-        when(event.event(EventType.VERIFY_EMAIL)).thenReturn(event);
-        when(event.detail(Details.EMAIL, user.getEmail())).thenReturn(event);
-
-        when(requiredActionContext.getAuthenticationSession()).thenReturn(authSession);
+        setupEventBuilderCloneAndEventAndGetAuthenticationSessionAnd4MoreStubs();
 
         mockChallenge();
 
@@ -237,19 +221,9 @@ class VerifyEmailByCodeTest {
     @Test
     public void shouldChallengeWithErrorOnProcessActionWhenCodeIsNotValid() {
         initAction();
-        when(requiredActionContext.getUser()).thenReturn(user);
+        setupEventBuilderCloneAndEventAndGetAuthenticationSessionAnd5MoreStubs();
         when(session.getProvider(UserProfileProvider.class)).thenReturn(provider);
         when(requiredActionContext.getSession()).thenReturn(session);
-        when(user.getEmail()).thenReturn("keycloak@redfroggy.fr");
-
-        when(requiredActionContext.getEvent()).thenReturn(event);
-        when(event.clone()).thenReturn(event);
-        when(event.event(EventType.VERIFY_EMAIL)).thenReturn(event);
-        when(event.detail(Details.EMAIL, user.getEmail())).thenReturn(event);
-
-        when(requiredActionContext.getAuthenticationSession()).thenReturn(authSession);
-
-        when(authSession.getAuthNote(VerifyEmailByCode.VERIFY_EMAIL_CODE)).thenReturn("code is valid");
 
         HttpRequest request = mock(HttpRequest.class);
         when(requiredActionContext.getHttpRequest()).thenReturn(request);
@@ -276,16 +250,7 @@ class VerifyEmailByCodeTest {
     @Test
     public void shouldSuccessOnProcessActionWhenCodeIsValid() {
         initAction();
-        when(requiredActionContext.getUser()).thenReturn(user);
-        when(user.getEmail()).thenReturn("keycloak@redfroggy.fr");
-
-        when(requiredActionContext.getEvent()).thenReturn(event);
-        when(event.clone()).thenReturn(event);
-        when(event.event(EventType.VERIFY_EMAIL)).thenReturn(event);
-        when(event.detail(Details.EMAIL, user.getEmail())).thenReturn(event);
-
-        when(requiredActionContext.getAuthenticationSession()).thenReturn(authSession);
-        when(authSession.getAuthNote(VerifyEmailByCode.VERIFY_EMAIL_CODE)).thenReturn("code is valid");
+        setupEventBuilderCloneAndEventAndGetAuthenticationSessionAnd5MoreStubs();
 
         HttpRequest request = mock(HttpRequest.class);
         when(requiredActionContext.getHttpRequest()).thenReturn(request);
@@ -300,5 +265,30 @@ class VerifyEmailByCodeTest {
         verify(authSession).removeAuthNote(VerifyEmailByCode.VERIFY_EMAIL_CODE);
         verify(event).success();
         verify(requiredActionContext).success();
+    }
+
+    private void setupEventBuilderCloneAndEventAndGetAuthenticationSessionAnd4MoreStubs() {
+        when(requiredActionContext.getUser()).thenReturn(user);
+        when(user.getEmail()).thenReturn("keycloak@redfroggy.fr");
+        when(requiredActionContext.getEvent()).thenReturn(event);
+        when(event.clone()).thenReturn(event);
+        when(event.event(EventType.VERIFY_EMAIL)).thenReturn(event);
+        when(event.detail(Details.EMAIL, user.getEmail())).thenReturn(event);
+        when(requiredActionContext.getAuthenticationSession()).thenReturn(authSession);
+    }
+
+    private void setupEventBuilderCloneAndEventAndGetAuthenticationSessionAnd5MoreStubs() {
+        setupEventBuilderCloneAndEventAndGetAuthenticationSessionAnd4MoreStubs();
+        when(authSession.getAuthNote(VerifyEmailByCode.VERIFY_EMAIL_CODE)).thenReturn("code is valid");
+    }
+
+    private void setupRealmModelIsVerifyEmailAndGetRealmStubs(boolean isVerifyEmailReturnValue) {
+        when(requiredActionContext.getRealm()).thenReturn(realm);
+        when(realm.isVerifyEmail()).thenReturn(isVerifyEmailReturnValue);
+    }
+
+    private void setupRequiredActionContextGetUserAndIsEmailVerifiedStubs(boolean isEmailVerifiedReturnValue) {
+        when(requiredActionContext.getUser()).thenReturn(user);
+        when(user.isEmailVerified()).thenReturn(isEmailVerifiedReturnValue);
     }
 }
